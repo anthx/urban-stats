@@ -39,14 +39,6 @@ for i, word in enumerate(sorted(frequency, key=frequency.get, reverse=True)):
     else:
         break
 
-print("\nEnding in Y\n")
-for word in words_ending_in(most_words, "y"):
-    print(word)
-
-print("\nEnding in D\n")
-for word in words_ending_in(most_words, "d"):
-    print(word)
-
 print("\nShort Words\n")
 for word in most_words:
     if len(word) < 5 :
@@ -78,8 +70,7 @@ top_sentences = {}
 for sentence in eng_sentence_splitter(all_words):
     for top in top_words:
         if top in sentence:
-            print(sentence)
-            break
+            top_sentences[sentence] = top_sentences.get(sentence, 0) + 1
 
 
 def main(argv):
@@ -110,6 +101,14 @@ def main(argv):
             #     if word[0] in [".", ]
             most_words.append(word)
     # print(definitions)
+
+    print("\nEnding in Y\n")
+    for word in words_ending_in(most_words, "y"):
+        print(word)
+
+    print("\nEnding in D\n")
+    for word in words_ending_in(most_words, "d"):
+        print(word)
 
     try:
         template = env.get_template("definition.html")
