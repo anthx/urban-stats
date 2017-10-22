@@ -16,7 +16,7 @@ def words_ending_in(word_list: list, string: str) -> list:
     """
     result = []
     for each in word_list:
-        if each[0-len(string):] == string:
+        if each[0-len(string):] == string and each not in result:
             result.append(each)
     return result
 
@@ -25,19 +25,36 @@ most_words = ["five", "dog", "sexy"]
 all_words = "The cat sat on the mat"
 print("number of (useful) words: ", len(most_words))
 
-print("\nTop 10 Words by frequency")
-frequency = {}
-for word in most_words:
-    frequency[word] = frequency.get(word, 0) + 1
 
-top_words = []
-for i, word in enumerate(sorted(frequency, key=frequency.get, reverse=True)):
-    if i < 10:
-        top_words.append(word)
-        percent = frequency[word]/len(most_words)*100
-        print(word, frequency[word], str(round(percent, 2))+"%")
-    else:
-        break
+def word_frequency(word_list: list):
+    """
+    Returns a dict of words and their frequency in a given list
+    :param word_list:
+    :return: Dict of word frequency
+    """
+    frequency = {}
+    for word in word_list:
+        frequency[word] = frequency.get(word, 0) + 1
+    return frequency
+
+
+def top_x_words(frequency: dict, size: int) -> list:
+    """
+    Returns a list of the top x words, sorted by frequency, as a tuple: word, frequency, %
+    :param frequency:
+    :param size:
+    :return:
+    """
+    top_words = []
+    for i, word in enumerate(
+            sorted(frequency, key=frequency.get, reverse=True)):
+        if i < size:
+            percent = frequency[word] / len(frequency) * 100
+            top_words.append((word, frequency[word], str(round(percent, 2)) + "%"))
+        else:
+            break
+    return top_words
+
 
 print("\nShort Words\n")
 for word in most_words:
@@ -48,8 +65,6 @@ print("\nLong Words\n")
 for word in most_words:
     if len(word) >= 5:
         print(word)
-
-print("\nSentences containing the top words\n")
 
 
 def eng_sentence_splitter(text):
@@ -66,11 +81,40 @@ def eng_sentence_splitter(text):
     sentences = [frag for frag in sentences if len(frag) > 2]
     return sentences
 
-top_sentences = {}
-for sentence in eng_sentence_splitter(all_words):
-    for top in top_words:
-        if top in sentence:
-            top_sentences[sentence] = top_sentences.get(sentence, 0) + 1
+
+def sentence_importance(sentences: list, word_list: list) -> dict:
+    """
+    Returns a dict of sentences and their importance (based on count of words in
+    word_list contained within that sentence
+    :param sentences: The sentences to analyse
+    :param word_list: The words to a use in anaylsis
+    :return: A dict of sentence => relative interest
+    """
+    interesting_sentences = {}
+    for sentence in sentences:
+        for word in word_list:
+            if word in sentence:
+                interesting_sentences[sentence] = interesting_sentences.get(
+                    sentence, 0) + 1
+    return interesting_sentences
+
+
+def top_x_sentences(frequency: dict, size: int) -> list:
+    """
+    Returns a list of the top x words, sorted by frequency, as a tuple: word, frequency, %
+    :param frequency:
+    :param size:
+    :return:
+    """
+    top_sentences = []
+    for i, word in enumerate(
+            sorted(frequency, key=frequency.get, reverse=True)):
+        if i < size:
+            percent = frequency[word] / len(frequency) * 100
+            top_sentences.append((word, frequency[word], str(round(percent, 2)) + "%"))
+        else:
+            break
+    return top_sentences
 
 
 def main(argv):
@@ -102,6 +146,14 @@ def main(argv):
             most_words.append(word)
     # print(definitions)
 
+
+    print("\nTop 10 Words by frequency")
+    top_10_words = top_x_words(word_frequency(most_words), 10)
+    the_10_top_words = []
+    for freq in top_10_words:
+        print(freq[0], freq[1], freq[2])
+        the_10_top_words.append(freq[0])
+
     print("\nEnding in Y\n")
     for word in words_ending_in(most_words, "y"):
         print(word)
@@ -109,6 +161,13 @@ def main(argv):
     print("\nEnding in D\n")
     for word in words_ending_in(most_words, "d"):
         print(word)
+
+    print("\nSentences containing the top words\n")
+    sentences = eng_sentence_splitter(all_words)
+    sentences_with_interest = sentence_importance(sentences, the_10_top_words)
+    top_10_sentences = top_x_sentences(sentences_with_interest, 10)
+    for interesting_sentence in top_10_sentences:
+        print(interesting_sentence[0], interesting_sentence[1], interesting_sentence[2])
 
     try:
         template = env.get_template("definition.html")
