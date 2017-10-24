@@ -1,4 +1,4 @@
-import requests, json, re, sys
+import requests, json, re, sys, collections
 from jinja2 import exceptions, Environment, BaseLoader, FileSystemLoader, select_autoescape
 
 env = Environment(
@@ -35,7 +35,8 @@ def word_frequency(word_list: list):
 
 def top_x_words(frequency: dict, size: int) -> list:
     """
-    Returns a list of the top x words, sorted by frequency, as a tuple: word, frequency, %
+    Returns a list of the top x words, sorted by frequency, as a tuple: word, f
+    requency, % of every word.
     :param frequency:
     :param size:
     :return:
@@ -101,7 +102,8 @@ def sentence_importance(sentences: list, word_list: list) -> dict:
 
 def top_x_sentences(frequency: dict, size: int) -> list:
     """
-    Returns a list of the top x words, sorted by frequency, as a tuple: word, frequency, %
+    Returns a list of the top x words, sorted by frequency, as a tuple: word,
+    frequency, % of words given that this sentence contains
     :param frequency:
     :param size:
     :return:
@@ -110,7 +112,7 @@ def top_x_sentences(frequency: dict, size: int) -> list:
     for i, word in enumerate(
             sorted(frequency, key=frequency.get, reverse=True)):
         if i < size:
-            percent = frequency[word] / len(frequency) * 100
+            percent = frequency[word] / size * 100
             top_sentences.append((word, frequency[word], str(round(percent, 2)) + "%"))
         else:
             break
@@ -124,12 +126,12 @@ def main(argv):
     # print(filename)
     # messenger(defined_word, chat)
 
-    with open("cat-urban.json", "r") as definition_file:
+    with open(f"{defined_word}-urban.json", "r") as definition_file:
         definitions = json.loads(definition_file.read())
 
     all_words = ""
     for n, definition in enumerate(definitions["list"]):
-        # print(n," ", definition["definition"], "\n")
+
         all_words += definition["definition"] + " "
 
     list_of_common_words = ["that", "with", "the", "to", "and", "you", "of",
@@ -138,13 +140,11 @@ def main(argv):
                             "their", "your", "who", "all"]
     most_words = []
     for word in re.split("[,. ]", all_words):
-        # if "." in word: print(word.isalpha())
+
         if (word.lower() not in list_of_common_words and
                 not word.isnumeric() and len(word) > 3 and "\n" not in word):
-            # for letter in word:
-            #     if word[0] in [".", ]
             most_words.append(word)
-    # print(definitions)
+
     print("number of (useful) words: ", len(most_words))
 
     print("\nTop 10 Words by frequency")
@@ -178,10 +178,16 @@ def main(argv):
     small_words = words_at_most(most_words, 4)
     for word in small_words:
         print(word)
-
+    WordStuff = collections.namedtuple('Def',
+                                       'word top_10_sentences top_10_words long short')
+    word_stuff = WordStuff(word=defined_word, top_10_sentences=top_10_sentences,
+                           top_10_words=top_10_words,
+                           long=words_at_least(most_words, 9),
+                           short=words_at_most(most_words, 4),
+                           )
     try:
         template = env.get_template("definition.html")
-        output = (template.render(defined_word=defined_word))
+        output = (template.render(data=word_stuff))
 
         with open(f"Statistics_about_{defined_word}.html", 'wb') as f:
             f.write(output.encode("utf-8"))
