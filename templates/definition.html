@@ -26,13 +26,13 @@
 <h2>Top 10 Words</h2>
 <ul>
 {% for word in data['top_10_words'] %}
-<li>{{word}}</li>
+<li>"{{word[0]}}" is found {{word[1]}} time/s through all the definitions. It's {{word[2]}} interesting.</li>
 {% endfor %}
 </ul>
 <h2>Top 10 Sentences</h2>
 <ul>
 {% for sentence in data['top_10_sentences'] %}
-<li>{{sentence}}</li>
+    <li>"<em>{{sentence[0]}}</em>" contains <strong>{{sentence[1]}}</strong> of the top 10 words. It has an importance of <strong>{{sentence[2]}}</strong></li>
 {% endfor %}
 </ul>
 
