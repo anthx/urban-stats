@@ -12,18 +12,17 @@ app = Flask(__name__)
 
 
 @app.route('/')
-def empty():
-    return "use /?word=[word]"
-
-
-@app.route('/<word>')
-def main(word: str):
-    if len(word) == 0 or word.isspace() or word is None:
+def main():
+    word = request.args.get("word", None)
+    if word is None or len(word) == 0 or word.isspace():
         return "use /?word=[word]"
 
     defined_word=word
-    r = requests.get(f"http://api.urbandictionary.com/v0/define?term={defined_word}")
-    definitions = r.json()
+    try:
+        r = requests.get(f"http://api.urbandictionary.com/v0/define?term={defined_word}")
+        definitions = r.json()
+    except requests.ConnectionError:
+        return "Can't Connect"
 
     all_words = ""
     for n, definition in enumerate(definitions["list"]):
@@ -42,6 +41,8 @@ def main(word: str):
 
     top_10_words = top_x_words(word_frequency(most_words), 10)
     the_10_top_words = []
+    for freq in top_10_words:
+        the_10_top_words.append(freq[0])
 
     sentences = eng_sentence_splitter(all_words)
     sentences_with_interest = sentence_importance(sentences, the_10_top_words)
