@@ -2,6 +2,7 @@ import requests, json, re, sys, collections
 from jinja2 import exceptions, Environment, BaseLoader, FileSystemLoader, select_autoescape
 from flask import Flask, request, render_template
 from word_stats import *
+from caching_utils import *
 
 env = Environment(
     loader=FileSystemLoader('templates'),
@@ -18,13 +19,29 @@ def main():
         return "use /?word=[word]"
 
     defined_word=word
-    try:
-        r = requests.get(f"http://api.urbandictionary.com/v0/define?term={defined_word}")
-        definitions = r.json()
-    except requests.ConnectionError:
-        return "Can't Connect"
+    if check_file_is_young(f"json/{defined_word}.json"):
+        try:
+            file = open(f"json/{defined_word}.json", "r")
+            definitions = json.load(file)
+        except FileNotFoundError:
+            print("Can't read from file system, getting directly")
+            definitions = get_from_api(defined_word)
+    else:
+        print("cache too old")
+        try:
+            definitions = get_from_api(defined_word)
+            try:
+                with open(f"json/{defined_word}.json", "w") as file:
+                    json.dump(definitions, file)
+            except OSError:
+                print("can't save cache")
+            except json.JSONDecodeError:
+                print("nothing to write")
+        except requests.ConnectionError:
+            return "Can't connect"
 
     all_words = ""
+
     for n, definition in enumerate(definitions["list"]):
 
         all_words += definition["definition"] + " "
@@ -62,12 +79,15 @@ def main():
     try:
         template = env.get_template("definition.html")
         output = (template.render(data=word_stuff))
-
-        with open(f"Statistics_about_{defined_word}.html", 'wb') as f:
-            f.write(output.encode("utf-8"))
+        try:
+            with open(f"Statistics_about_{defined_word}.html", 'wb') as f:
+                f.write(output.encode("utf-8"))
+        except OSError:
+            print("Can't write to file system")
+        return output
     except exceptions.TemplateNotFound:
         print("Template not found")
-    return render_template("definition.html", data=word_stuff)
+
 
 
 if __name__ == '__main__':
