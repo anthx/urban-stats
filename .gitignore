@@ -1,2 +1,4 @@
 *.json
 .idea
+*.csv
+Statistics_about_*.html
