@@ -119,75 +119,78 @@ def top_x_sentences(frequency: dict, size: int) -> list:
     return top_sentences
 
 
-def main(argv):
-    defined_word = argv[0]
-    # chat = ChatLog()
-    # print(locale.getpreferredencoding())
-    # print(filename)
-    # messenger(defined_word, chat)
-
-    with open(f"{defined_word}-urban.json", "r") as definition_file:
-        definitions = json.loads(definition_file.read())
-
+def analyse_definition(defined_word, definitions):
     all_words = ""
     for n, definition in enumerate(definitions["list"]):
-
         all_words += definition["definition"] + " "
-
     list_of_common_words = ["that", "with", "the", "to", "and", "you", "of",
                             "not", "for", "them",
                             "have", "when", "out", "as", "in", "are", "they",
                             "their", "your", "who", "all"]
     most_words = []
     for word in re.split("[,. ]", all_words):
-
         if (word.lower() not in list_of_common_words and
                 not word.isnumeric() and len(word) > 3 and "\n" not in word):
             most_words.append(word)
-
-    print("number of (useful) words: ", len(most_words))
-
-    print("\nTop 10 Words by frequency")
     top_10_words = top_x_words(word_frequency(most_words), 10)
     the_10_top_words = []
     for freq in top_10_words:
-        print(freq[0], freq[1], freq[2])
         the_10_top_words.append(freq[0])
-
-    print("\nSentences containing the top words\n")
     sentences = eng_sentence_splitter(all_words)
     sentences_with_interest = sentence_importance(sentences, the_10_top_words)
     top_10_sentences = top_x_sentences(sentences_with_interest, 10)
-    for interesting_sentence in top_10_sentences:
-        print(interesting_sentence[0], interesting_sentence[1], interesting_sentence[2])
-
-    print("\nEnding in Y\n")
-    for word in words_ending_in(most_words, "y"):
-        print(word)
-
-    print("\nEnding in D\n")
-    for word in words_ending_in(most_words, "d"):
-        print(word)
-
-    print("\nLong Words\n")
     big_words = words_at_least(most_words, 7)
-    for word in big_words:
-        print(word)
-
-    print("\nShort Words\n")
     small_words = words_at_most(most_words, 4)
-    for word in small_words:
-        print(word)
     WordStuff = collections.namedtuple('Def',
-                                       'word top_10_sentences top_10_words long short')
+                                       'word top_10_sentences top_10_words '
+                                       'long short most_words')
     word_stuff = WordStuff(word=defined_word, top_10_sentences=top_10_sentences,
                            top_10_words=top_10_words,
                            long=words_at_least(most_words, 9),
                            short=words_at_most(most_words, 4),
+                           most_words=most_words
                            )
+    return word_stuff
+
+
+def main(argv):
+    defined_word = argv[0]
+
+    with open(f"{defined_word}-urban.json", "r") as definition_file:
+        definitions = json.loads(definition_file.read())
+
+    # create the container of analysis
+    word_data = analyse_definition(defined_word, definitions)
+
+    print("number of (useful) words: ", len(word_data.most_words))
+
+    print("\nTop 10 Words by frequency")
+    for freq in getattr(word_data, "top_10_words"):
+        print(freq[0], freq[1], freq[2])
+
+    print("\nSentences containing the top words\n")
+    for interesting_sentence in getattr(word_data, "top_10_sentences"):
+        print(interesting_sentence[0], interesting_sentence[1], interesting_sentence[2])
+
+    print("\nEnding in Y\n")
+    for word in words_ending_in(word_data.most_words, "y"):
+        print(word)
+
+    print("\nEnding in D\n")
+    for word in words_ending_in(word_data.most_words, "d"):
+        print(word)
+
+    print("\nLong Words\n")
+    for word in word_data.long:
+        print(word)
+
+    print("\nShort Words\n")
+    for word in word_data.short:
+        print(word)
+
     try:
         template = env.get_template("definition.html")
-        output = (template.render(data=word_stuff))
+        output = (template.render(data=word_data))
 
         with open(f"Statistics_about_{defined_word}.html", 'wb') as f:
             f.write(output.encode("utf-8"))
