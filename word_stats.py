@@ -156,7 +156,7 @@ def analyse_definition(defined_word, definitions):
 def main(argv):
     defined_word = argv[0]
 
-    with open(f"{defined_word}-urban.json", "r") as definition_file:
+    with open(f"{defined_word}.json", "r") as definition_file:
         definitions = json.loads(definition_file.read())
 
     # create the container of analysis
