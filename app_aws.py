@@ -29,7 +29,7 @@ def main():
     if check_file_is_young(f"json/{defined_word}.json"):
         try:
 
-            s3_object = resource.object('urban-statistics', object_key).get()["Body"].read()
+            s3_object = resource.Object('urban-statistics', object_key).get()["Body"]
             definitions = json.load(s3_object)
         except FileNotFoundError:
             print("Can't read from file system, getting directly")
