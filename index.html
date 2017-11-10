@@ -12,10 +12,28 @@
             <h1 class="w3-center">Dictionary Definition Analysis Tool</h1>
         </header>
         <div class="w3-content">
-            <form method="GET">
-                <label for="word" class="w3-center">Word to Analyse</label>
-                <input id="word" name="word" class="w3-input w3-border" />
-                <button type="submit" class="w3-button w3-blue w3-mobile">Analyse!</button>
+            <h1>About this tool</h1>
+            <p>This tool was inspired by Urban Dictionary Definitions of my name. I found that many of them had similar themes so I wanted to see if I could build a tool to discover these themes.</p>
+            <p>Currently the tool does a few things: </p>
+            <ul>
+                <li>Determines relative word and sentence importances.</li>
+                <ol>
+                    <li>Works out the most commonly used words across all definitions, </li>
+                    <li>then finds the whole sentences across all definitions that use this works the most. </li>
+                </ol>
+                <li>Displays all the words above 9 characters in length.</li>
+                <li>Displays all the words below 4 characters in length.</li>
+            </ul>
+            <p>To use, just search for the word you'd like to analyse. You'll be taken to a results page on AWS.</p>
+        </div>
+        <div class="w3-content w3-border" style="width: 200px;">
+            <!-- change the form action to your own URL -->
+            <form method="GET" action="https://q52j805863.execute-api.ap-southeast-2.amazonaws.com/dev">
+                <div class="w3-margin">
+                    <label for="word" class="w3-center">Word to Analyse:</label>
+                    <input id="word" name="word" class="w3-input w3-border" />
+                </div>
+                <button type="submit" class="w3-button w3-blue w3-mobile w3-margin-left w3-margin-bottom">Analyse!</button>
             </form>
         </div>
         <footer class="w3-blue"></footer>
