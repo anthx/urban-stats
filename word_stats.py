@@ -120,17 +120,34 @@ def top_x_sentences(frequency: dict, size: int) -> list:
 
 
 def analyse_definition(defined_word, definitions):
+    naughty_words = []
+    with open("word_lists/LDNOOBW_en.txt") as naughty_words_list:
+        naughty_words = naughty_words_list.read().splitlines()
+
+    naughty_definitions = []
+
     all_words = ""
     for n, definition in enumerate(definitions["list"]):
         all_words += definition["definition"] + " "
-    list_of_common_words = ["that", "with", "the", "to", "and", "you", "of",
+        for naughty_word in naughty_words:
+            if naughty_word in definition["definition"].lower() \
+                    and definition["definition"] not in naughty_definitions:
+                naughty_definitions.append(definition["definition"])
+
+    list_of_common_words = ["type", "with", "the", "to", "and", "you", "of",
                             "not", "for", "them",
                             "have", "when", "out", "as", "in", "are", "they",
                             "their", "your", "who", "all"]
+    with open("word_lists/google-10000-english-no-swears.txt", "r") as words:
+        for line_num, line in enumerate(words):
+            list_of_common_words.append(line.strip())
+            if line_num > 100:
+                break
     most_words = []
+
     for word in re.split("[,. ]", all_words):
         if (word.lower() not in list_of_common_words and
-                not word.isnumeric() and len(word) > 3 and "\n" not in word):
+                not word.isnumeric() and len(word) >= 3 and "\n" not in word):
             most_words.append(word)
     top_10_words = top_x_words(word_frequency(most_words), 10)
     the_10_top_words = []
@@ -141,14 +158,18 @@ def analyse_definition(defined_word, definitions):
     top_10_sentences = top_x_sentences(sentences_with_interest, 10)
     big_words = words_at_least(most_words, 7)
     small_words = words_at_most(most_words, 4)
+
     WordStuff = collections.namedtuple('Def',
                                        'word top_10_sentences top_10_words '
-                                       'long short most_words')
+                                       'long short most_words def_count '
+                                       'naughty_defs')
     word_stuff = WordStuff(word=defined_word, top_10_sentences=top_10_sentences,
                            top_10_words=top_10_words,
                            long=words_at_least(most_words, 9),
                            short=words_at_most(most_words, 4),
-                           most_words=most_words
+                           most_words=most_words,
+                           def_count=len(definitions["list"]),
+                           naughty_defs=naughty_definitions
                            )
     return word_stuff
 
@@ -156,7 +177,7 @@ def analyse_definition(defined_word, definitions):
 def main(argv):
     defined_word = argv[0]
 
-    with open(f"{defined_word}.json", "r") as definition_file:
+    with open(f"json/{defined_word}.json", "r") as definition_file:
         definitions = json.loads(definition_file.read())
 
     # create the container of analysis

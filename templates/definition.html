@@ -1,55 +1,74 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Statistics for "{{data['word']}}"</title>
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
     <style type="text/css">
-    	body {
-    		font-family: 'Arial', 'Helvetica', sans-serif;
-    	}
+        body {
+            font-family: 'Arial', 'Helvetica', sans-serif;
+        }
+        
         ul.word-grid li {
             float: left;
             padding: 5pt;
             list-style: none;
         }
+        
         ul.word-grid {
             clear: both;
             float: left;
             margin-top: 0;
             padding-top: 0;
         }
+        
         h2 {
             clear: both;
         }
     </style>
 </head>
+
 <body>
-<h1>{{data['word']}}</h1>
+    <div class="w3-container">
+        <header class="w3-blue">
+            <h1 class="w3-center">{{data['word']}}</h1>
+            <h3 class="w3-center"><a href="https://www.urbandictionary.com/define.php?term={{data['word']}}" target="_blank" rel="noopener">Original Definition</a> at Urban Dictionary</h3>
+        </header>
 
-<h2>Top 10 Words</h2>
-<ul>
-{% for word in data['top_10_words'] %}
-<li>"{{word[0]}}" is found {{word[1]}} time/s through all the definitions. It's {{word[2]}} interesting.</li>
-{% endfor %}
-</ul>
-<h2>Top 10 Sentences</h2>
-<ul>
-{% for sentence in data['top_10_sentences'] %}
-    <li>"<em>{{sentence[0]}}</em>" contains <strong>{{sentence[1]}}</strong> of the top 10 words. It has an importance of <strong>{{sentence[2]}}</strong></li>
-{% endfor %}
-</ul>
+        <h2>Top 10 Words</h2>
+        <ul>
+            {% for word in data['top_10_words'] %}
+            <li>"{{word[0]}}" is found {{word[1]}} time/s through all the definitions. It's {{word[2]}} interesting.</li>
+            {% endfor %}
+        </ul>
+        <h2>Top 10 Sentences</h2>
+        <ul>
+            {% for sentence in data['top_10_sentences'] %}
+            <li>"<em>{{sentence[0]}}</em>" contains <strong>{{sentence[1]}}</strong> of the top 10 words. It has an importance of <strong>{{sentence[2]}}</strong></li>
+            {% endfor %}
+        </ul>
 
-<h2>Long Words</h2>
-<ul class="word-grid">
-{% for word in data['long'] %}
-<li>{{word}}</li>
-{% endfor %}
-</ul>
+        <h2>Long Words</h2>
+        <ul class="word-grid">
+            {% for word in data['long'] %}
+            <li>{{word}}</li>
+            {% endfor %}
+        </ul>
 
-<h2>Short Words</h2>
-<ul class="word-grid">
-{% for word in data['short'] %}
-<li>{{word}}</li>
-{% endfor %}
-</ul>
+        <h2>Short Words</h2>
+        <ul class="word-grid">
+            {% for word in data['short'] %}
+            <li>{{word}}</li>
+            {% endfor %}
+        </ul>
+
+        <h2>Naughtiness</h2>
+        <p>Out of the {{ data['def_count'] }} definition/s for "{{ data['word'] }}", the following {{ data['naughty_defs']|length }} are naughty...</p>
+        <ul>
+            {% for definition in data['naughty_defs'] %}
+            <li>{{definition}}</li>
+            {% endfor %}
+        </ul>
+    </div>
 </body>
