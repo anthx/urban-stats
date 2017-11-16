@@ -50,8 +50,12 @@ def main():
         except requests.ConnectionError:
             return "Can't connect"
 
-    # create the container of analysis
-    word_stuff = analyse_definition(defined_word, definitions)
+    # create the container of analysis only if the result set > 0
+    if definitions['result_type'] != 'no_results':
+        word_stuff = analyse_definition(defined_word, definitions)
+    else:
+        return "There's no results found for '" + word + "' on Urban Dictionary"
+
     try:
         template = env.get_template("definition.html")
         output = (template.render(data=word_stuff))

@@ -180,8 +180,11 @@ def main(argv):
     with open(f"json/{defined_word}.json", "r") as definition_file:
         definitions = json.loads(definition_file.read())
 
-    # create the container of analysis
-    word_data = analyse_definition(defined_word, definitions)
+    # create the container of analysis only if the result set > 0
+    if definitions['result_type'] != 'no_results':
+        word_data = analyse_definition(defined_word, definitions)
+    else:
+        return "There's no results found for '" + defined_word + "' on Urban Dictionary"
 
     print("number of (useful) words: ", len(word_data.most_words))
 
