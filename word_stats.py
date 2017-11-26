@@ -1,4 +1,5 @@
 import requests, json, re, sys, collections
+import re
 from jinja2 import exceptions, Environment, BaseLoader, FileSystemLoader, select_autoescape
 
 env = Environment(
@@ -119,20 +120,28 @@ def top_x_sentences(frequency: dict, size: int) -> list:
     return top_sentences
 
 
+def text_is_naughty(naughty_words: list, text: str) -> bool:
+    """
+    Return true if text contains naughty word from LDNOOBW list
+    :param naughty_words: a list of words to search against
+    :param text: text to search
+    :return: boolean of naughtiness
+    """
+    # for word in text.split():
+    #     if word.lower() in naughty_words:
+    #         return True
+
+    for naughty_word in naughty_words:
+        re_pattern = f"\\b{naughty_word}"
+        if re.search(re_pattern, text):
+            return True
+    return False
+
+
 def analyse_definition(defined_word, definitions):
     naughty_words = []
     with open("word_lists/LDNOOBW_en.txt") as naughty_words_list:
         naughty_words = naughty_words_list.read().splitlines()
-
-    naughty_definitions = []
-
-    all_words = ""
-    for n, definition in enumerate(definitions["list"]):
-        all_words += definition["definition"] + " "
-        for naughty_word in naughty_words:
-            if naughty_word in definition["definition"].lower() \
-                    and definition["definition"] not in naughty_definitions:
-                naughty_definitions.append(definition["definition"])
 
     list_of_common_words = ["type", "with", "the", "to", "and", "you", "of",
                             "not", "for", "them",
@@ -143,33 +152,47 @@ def analyse_definition(defined_word, definitions):
             list_of_common_words.append(line.strip())
             if line_num > 100:
                 break
-    most_words = []
 
+    naughty_definitions = []
+    clean_definitions = []
+    all_words = ""
+    for n, definition in enumerate(definitions["list"]):
+        all_words += definition["definition"] + " "
+        if text_is_naughty(naughty_words, definition["definition"]): #and definition["definition"] not in naughty_definitions:
+                naughty_definitions.append(definition["definition"])
+        else:
+            clean_definitions.append(definition["definition"])
+
+    most_words = []
     for word in re.split("[,. ]", all_words):
         if (word.lower() not in list_of_common_words and
                 not word.isnumeric() and len(word) >= 3 and "\n" not in word):
             most_words.append(word)
+
     top_10_words = top_x_words(word_frequency(most_words), 10)
     the_10_top_words = []
     for freq in top_10_words:
         the_10_top_words.append(freq[0])
+
     sentences = eng_sentence_splitter(all_words)
     sentences_with_interest = sentence_importance(sentences, the_10_top_words)
     top_10_sentences = top_x_sentences(sentences_with_interest, 10)
+
     big_words = words_at_least(most_words, 7)
     small_words = words_at_most(most_words, 4)
 
     WordStuff = collections.namedtuple('Def',
                                        'word top_10_sentences top_10_words '
                                        'long short most_words def_count '
-                                       'naughty_defs')
+                                       'naughty_defs clean_defs')
     word_stuff = WordStuff(word=defined_word, top_10_sentences=top_10_sentences,
                            top_10_words=top_10_words,
                            long=words_at_least(most_words, 9),
                            short=words_at_most(most_words, 4),
                            most_words=most_words,
                            def_count=len(definitions["list"]),
-                           naughty_defs=naughty_definitions
+                           naughty_defs=naughty_definitions,
+                           clean_defs=clean_definitions
                            )
     return word_stuff
 

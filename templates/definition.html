@@ -70,5 +70,11 @@
             <li>{{definition}}</li>
             {% endfor %}
         </ul>
+        <p>Out of the {{ data['def_count'] }} definition/s for "{{ data['word'] }}", the following {{ data['clean_defs']|length }} are clean...</p>
+        <ul>
+            {% for definition in data['clean_defs'] %}
+            <li>{{definition}}</li>
+            {% endfor %}
+        </ul>
     </div>
 </body>

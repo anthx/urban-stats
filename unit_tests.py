@@ -2,6 +2,10 @@ import unittest, word_stats
 
 
 class UniTests(unittest.TestCase):
+    naughty_words = []
+    with open("word_lists/LDNOOBW_en.txt") as naughty_words_list:
+        naughty_words = naughty_words_list.read().splitlines()
+
     word_list = ["five", "bed", "day", "read", "usually", "sexy", "Sexy", "12",
                  "need", "dead", "education", "educated", "five", "five", "day"]
     all_words = "1. The cat sat on the mat. Is he glad? Wait, it's actually a she!"
@@ -40,8 +44,8 @@ class UniTests(unittest.TestCase):
         self.assertEqual(expected, actual)
 
     def testTop3Sentences(self):
-        expected = [('The cat sat on the mat.', 2, '100.0%'),
-                    ("Wait, it's actually a she!", 1, '50.0%')]
+        expected = [('The cat sat on the mat.', 2, '66.67%'),
+                    ("Wait, it's actually a she!", 1, '33.33%')]
         actual = word_stats.top_x_sentences(self.expected_sentence_importance, 3)
         self.assertEqual(expected, actual)
 
@@ -54,3 +58,21 @@ class UniTests(unittest.TestCase):
         expected = ["usually", "education", "educated"]
         actual = word_stats.words_at_least(self.word_list, 5)
         self.assertEqual(expected, actual)
+
+    def testNaughtyText(self):
+        naughty_text = "My ass hurts because of the dingleberry."
+        self.assertTrue(
+            word_stats.text_is_naughty(self.naughty_words, naughty_text),
+            "naughty words not found")
+        naughty_text_2 = "Prefer blow jobs or handjobs"
+        self.assertTrue(
+            word_stats.text_is_naughty(self.naughty_words, naughty_text_2),
+                        "naughty words not found")
+
+    def testNotNaugtyText(self):
+        not_naught_text = "I'll pass on the hand waving thanks. I like my job."
+        not_naughty_text_2 = "The fan blows hot air."
+        self.assertIs(word_stats.text_is_naughty(self.naughty_words, not_naught_text), False,
+                         "false positive")
+        self.assertIs(word_stats.text_is_naughty(self.naughty_words, not_naughty_text_2), False,
+                         "faslse positive")
