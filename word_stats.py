@@ -235,6 +235,19 @@ def main(argv):
     for word in word_data.short:
         print(word)
 
+    print("\nNaughty Definitions\n")
+    print(f"Out of {word_data.def_count} definitions for {word_data.word}, "
+          f"the following {len(word_data.naughty_defs)} are naughty:")
+    for definition in word_data.naughty_defs:
+        print("~~ " + definition + " /~~")
+
+    print("\nClean Definitions\n")
+    print(f"Out of {word_data.def_count} definitions for {word_data.word}, "
+          f"the following {len(word_data.clean_defs)} are clean:")
+    for definition in word_data.clean_defs:
+        print("~~ " + definition + " /~~")
+
+
     try:
         template = env.get_template("definition.html")
         output = (template.render(data=word_data))
