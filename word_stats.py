@@ -1,6 +1,8 @@
 import requests, json, re, sys, collections
 import re
 from jinja2 import exceptions, Environment, BaseLoader, FileSystemLoader, select_autoescape
+from caching_utils import check_file_is_young
+from caching_utils import get_from_api
 
 env = Environment(
     loader=FileSystemLoader('templates'),
@@ -156,8 +158,12 @@ def analyse_definition(defined_word, definitions):
     naughty_definitions = []
     clean_definitions = []
     all_words = ""
+    sentences = []
+
+    # loop over each definition
     for n, definition in enumerate(definitions["list"]):
         all_words += definition["definition"] + " "
+        sentences.extend(eng_sentence_splitter(definition["definition"]))
         if text_is_naughty(naughty_words, definition["definition"]): #and definition["definition"] not in naughty_definitions:
                 naughty_definitions.append(definition["definition"])
         else:
@@ -174,7 +180,6 @@ def analyse_definition(defined_word, definitions):
     for freq in top_10_words:
         the_10_top_words.append(freq[0])
 
-    sentences = eng_sentence_splitter(all_words)
     sentences_with_interest = sentence_importance(sentences, the_10_top_words)
     top_10_sentences = top_x_sentences(sentences_with_interest, 10)
 
@@ -200,14 +205,33 @@ def analyse_definition(defined_word, definitions):
 def main(argv):
     defined_word = argv[0]
 
-    with open(f"json/{defined_word}.json", "r") as definition_file:
-        definitions = json.loads(definition_file.read())
+    if check_file_is_young(f"json/{defined_word}.json"):
+        try:
+            file = open(f"json/{defined_word}.json", "r")
+            definitions = json.load(file)
+        except FileNotFoundError:
+            print("Can't read from file system, getting directly")
+            definitions = get_from_api(defined_word)
+    else:
+        print("cache too old")
+        try:
+            definitions = get_from_api(defined_word)
+            try:
+                with open(f"json/{defined_word}.json", "w") as file:
+                    json.dump(definitions, file)
+            except OSError:
+                print("can't save cache")
+            except json.JSONDecodeError:
+                print("nothing to write")
+        except requests.ConnectionError:
+            return "Can't connect"
 
     # create the container of analysis only if the result set > 0
     if definitions['result_type'] != 'no_results':
         word_data = analyse_definition(defined_word, definitions)
     else:
-        return "There's no results found for '" + defined_word + "' on Urban Dictionary"
+        print("There's no results found for '" + defined_word + "' on Urban Dictionary")
+        return
 
     print("number of (useful) words: ", len(word_data.most_words))
 
