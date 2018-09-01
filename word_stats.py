@@ -164,7 +164,7 @@ def analyse_definition(defined_word, definitions):
     for n, definition in enumerate(definitions["list"]):
         all_words += definition["definition"] + " "
         sentences.extend(eng_sentence_splitter(definition["definition"]))
-        if text_is_naughty(naughty_words, definition["definition"]): #and definition["definition"] not in naughty_definitions:
+        if text_is_naughty(naughty_words, definition["definition"]):
                 naughty_definitions.append(definition["definition"])
         else:
             clean_definitions.append(definition["definition"])
@@ -227,10 +227,10 @@ def main(argv):
             return "Can't connect"
 
     # create the container of analysis only if the result set > 0
-    if definitions['result_type'] != 'no_results':
+    if len(definitions['list']) > 0:
         word_data = analyse_definition(defined_word, definitions)
     else:
-        print("There's no results found for '" + defined_word + "' on Urban Dictionary")
+        print(f"There's no results found for ' {defined_word} ' on Urban Dictionary")
         return
 
     print("number of (useful) words: ", len(word_data.most_words))
